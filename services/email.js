@@ -1,25 +1,14 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendOtpEmail = async (userEmail, otp) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error("SMTP credentials missing. Please define EMAIL_USER and EMAIL_PASS in your .env explicitly to enable node dispatching.");
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY is missing. Please define it in your environment to enable email dispatching.");
   }
 
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Use STARTTLS
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    },
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
-
-  const mailOptions = {
-    from: `"LifeTrack AI" <${process.env.EMAIL_USER}>`,
+  return await resend.emails.send({
+    from: 'onboarding@resend.dev',
     to: userEmail,
     subject: "Your LifeTrack Password Reset Code",
     html: `
@@ -32,29 +21,16 @@ const sendOtpEmail = async (userEmail, otp) => {
         <p style="color: #888; font-size: 12px; margin-top: 50px;">If you did not request this password reset, please safely ignore this email.</p>
       </div>
     `
-  };
-
-  return await transporter.sendMail(mailOptions);
+  });
 };
 
 const sendVerificationEmail = async (userEmail, otp) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error("SMTP credentials missing. Please define EMAIL_USER and EMAIL_PASS in your .env explicitly to enable node dispatching.");
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY is missing.");
   }
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Use STARTTLS
-    auth: { 
-      user: process.env.EMAIL_USER, 
-      pass: process.env.EMAIL_PASS 
-    },
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
-  const mailOptions = {
-    from: `"LifeTrack AI" <${process.env.EMAIL_USER}>`,
+
+  return await resend.emails.send({
+    from: 'onboarding@resend.dev',
     to: userEmail,
     subject: "Verify your LifeTrack Account",
     html: `
@@ -67,8 +43,7 @@ const sendVerificationEmail = async (userEmail, otp) => {
         <p style="color: #888; font-size: 12px; margin-top: 50px;">If you did not register for LifeTrack, please safely ignore this email.</p>
       </div>
     `
-  };
-  return await transporter.sendMail(mailOptions);
+  });
 };
 
 module.exports = { sendOtpEmail, sendVerificationEmail };

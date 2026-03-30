@@ -6,10 +6,15 @@ const sendOtpEmail = async (userEmail, otp) => {
   }
 
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Use STARTTLS
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
+    },
+    tls: {
+      rejectUnauthorized: false
     }
   });
 
@@ -37,8 +42,16 @@ const sendVerificationEmail = async (userEmail, otp) => {
     throw new Error("SMTP credentials missing. Please define EMAIL_USER and EMAIL_PASS in your .env explicitly to enable node dispatching.");
   }
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Use STARTTLS
+    auth: { 
+      user: process.env.EMAIL_USER, 
+      pass: process.env.EMAIL_PASS 
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
   });
   const mailOptions = {
     from: `"LifeTrack AI" <${process.env.EMAIL_USER}>`,

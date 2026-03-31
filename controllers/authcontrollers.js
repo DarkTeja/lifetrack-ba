@@ -1,6 +1,9 @@
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 // REGISTER
 exports.register = async (req, res) => {
@@ -100,6 +103,61 @@ exports.login = (req, res) => {
     });
   });
 };
+
+exports.googleLogin = async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ error: "Token required" });
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, given_name, family_name } = payload;
+
+    const sql = "SELECT * FROM users WHERE email = ?";
+    db.query(sql, [email], async (err, results) => {
+      if (err) {
+        console.error("Google Login DB Check Error:", err);
+        return res.status(500).json({ error: "Database error during check" });
+      }
+
+      if (results.length > 0) {
+        const user = results[0];
+        const sessionToken = jwt.sign(
+          { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name },
+          process.env.JWT_SECRET || "secretkey",
+          { expiresIn: "7d" }
+        );
+        return res.json({ message: "Login successful", token: sessionToken });
+      } else {
+        const randomPass = Math.random().toString(36).slice(-10);
+        const hashedPassword = await bcrypt.hash(randomPass, 10);
+        const insertSql = "INSERT INTO users (first_name, last_name, email, password, is_verified) VALUES (?, ?, ?, ?, 1)";
+        
+        db.query(insertSql, [given_name || 'Google', family_name || 'User', email, hashedPassword], (iErr, result) => {
+          if (iErr) {
+            console.error("Google Login User Creation Error:", iErr);
+            return res.status(500).json({ error: "Account creation failed" });
+          }
+          
+          const sessionToken = jwt.sign(
+            { id: result.insertId, email, first_name: given_name, last_name: family_name },
+            process.env.JWT_SECRET || "secretkey",
+            { expiresIn: "7d" }
+          );
+          res.json({ message: "Account created via Google", token: sessionToken });
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Google Token Verification Failed:", error.message);
+    res.status(401).json({ error: "Invalid Google token: " + error.message });
+  }
+};
+
+
 
 const emailService = require("../services/email");
 

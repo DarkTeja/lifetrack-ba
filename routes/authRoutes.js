@@ -9,7 +9,9 @@ router.post("/login", authcontrollers.login);
 router.post("/forgot-password", authcontrollers.forgotPassword);
 router.post("/verify-otp", authcontrollers.verifyOtp);
 router.post("/reset-password", authcontrollers.resetPassword);
+router.post("/google", authcontrollers.googleLogin);
 router.put("/profile", authcontrollers.updateProfile);
 router.put("/update-password", authcontrollers.updatePassword);
+
 
 module.exports = router;

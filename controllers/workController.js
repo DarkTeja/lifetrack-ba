@@ -3,8 +3,12 @@ const db = require("../config/db");
 // Work Sessions
 exports.addSession = (req, res) => {
   const { user_id, project, hours, type, date } = req.body;
+  const today = new Date().toISOString().split('T')[0];
+  if (date > today) return res.status(400).json({ error: "Cannot log future work sessions" });
+
   const upperProject = project ? project.toUpperCase() : "GENERAL";
   const sql = "INSERT INTO work_sessions (user_id, project, hours, type, date) VALUES (?, ?, ?, ?, ?)";
+
   db.query(sql, [user_id, upperProject, hours, type, date], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Work session added", id: result.insertId });

@@ -3,8 +3,12 @@ const db = require("../config/db");
 // Workouts
 exports.addWorkout = (req, res) => {
   const { user_id, type, duration_mins, calories_burned, date } = req.body;
+  const today = new Date().toISOString().split('T')[0];
+  if (date > today) return res.status(400).json({ error: "Cannot log future workouts" });
+
   const upperType = type ? type.toUpperCase() : "OTHER";
   const sql = "INSERT INTO workouts (user_id, type, duration_mins, calories_burned, date) VALUES (?, ?, ?, ?, ?)";
+
   db.query(sql, [user_id, upperType, duration_mins, calories_burned, date], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Workout added successfully", id: result.insertId });
@@ -22,7 +26,11 @@ exports.getWorkouts = (req, res) => {
 // Sleep Logs
 exports.addSleep = (req, res) => {
   const { user_id, hours_slept, quality, date } = req.body;
+  const today = new Date().toISOString().split('T')[0];
+  if (date > today) return res.status(400).json({ error: "Cannot log future sleep" });
+
   const sql = "INSERT INTO sleep_logs (user_id, hours_slept, quality, date) VALUES (?, ?, ?, ?)";
+
   db.query(sql, [user_id, hours_slept, quality, date], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Sleep logged successfully", id: result.insertId });
@@ -40,7 +48,11 @@ exports.getSleepLogs = (req, res) => {
 // Water Logs
 exports.addWater = (req, res) => {
   const { user_id, litres, date } = req.body;
+  const today = new Date().toISOString().split('T')[0];
+  if (date > today) return res.status(400).json({ error: "Cannot log future hydration" });
+
   const sql = "INSERT INTO water_logs (user_id, litres, date) VALUES (?, ?, ?)";
+
   db.query(sql, [user_id, litres, date], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Water logged successfully", id: result.insertId });

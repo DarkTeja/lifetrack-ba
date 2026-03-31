@@ -3,8 +3,12 @@ const db = require("../config/db");
 // Learning Sessions
 exports.addSession = (req, res) => {
   const { user_id, subject, duration_mins, date, notes } = req.body;
+  const today = new Date().toISOString().split('T')[0];
+  if (date > today) return res.status(400).json({ error: "Cannot log future study sessions" });
+
   const upperSubject = subject ? subject.toUpperCase() : "GENERAL";
   const sql = "INSERT INTO learning_sessions (user_id, subject, duration_mins, date, notes) VALUES (?, ?, ?, ?, ?)";
+
   db.query(sql, [user_id, upperSubject, duration_mins, date, notes], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Session added successfully", id: result.insertId });
@@ -52,8 +56,12 @@ exports.getGoals = (req, res) => {
 // Learning Scores
 exports.addScore = (req, res) => {
   const { user_id, subject, score, max_score, date } = req.body;
+  const today = new Date().toISOString().split('T')[0];
+  if (date > today) return res.status(400).json({ error: "Cannot record future scores" });
+
   const upperSubject = subject ? subject.toUpperCase() : "GENERAL";
   const sql = "INSERT INTO learning_scores (user_id, subject, score, max_score, date) VALUES (?, ?, ?, ?, ?)";
+
   db.query(sql, [user_id, upperSubject, score, max_score, date], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Score added successfully", id: result.insertId });

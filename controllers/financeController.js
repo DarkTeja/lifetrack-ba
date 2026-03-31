@@ -3,8 +3,12 @@ const db = require("../config/db");
 // Transactions
 exports.addTransaction = (req, res) => {
   const { user_id, type, amount, category, date, note } = req.body;
-  const upperCategory = category ? category.toUpperCase() : "OTHER";
+  const today = new Date().toISOString().split('T')[0];
+  if (date > today) return res.status(400).json({ error: "Cannot log future transactions" });
+
+  const upperCategory = category ? category.toUpperCase() : "GENERAL";
   const sql = "INSERT INTO transactions (user_id, type, amount, category, date, note) VALUES (?, ?, ?, ?, ?, ?)";
+
   db.query(sql, [user_id, type, amount, upperCategory, date, note], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Transaction added", id: result.insertId });

@@ -54,8 +54,9 @@ exports.setBudget = (req, res) => {
 
 exports.getBudgets = (req, res) => {
   const { user_id } = req.params;
-  const sql = "SELECT * FROM budgets WHERE user_id = ?";
-  db.query(sql, [user_id], (err, results) => {
+  const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+  const sql = "SELECT * FROM budgets WHERE user_id = ? AND month = ?";
+  db.query(sql, [user_id, currentMonth], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
